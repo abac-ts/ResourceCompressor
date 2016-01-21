@@ -7,7 +7,7 @@ A simple Maven plugin for compressing static assets (e.g. CSS and JavaScript fil
 <plugin>
 	<groupId>com.github.ryanholdren</groupId>
 	<artifactId>resourcegzipper</artifactId>
-	<version>0.0.1</version>
+	<version>0.0.2</version>
 	<executions>
 		<execution>
 			<id>gzip-css</id>
@@ -15,7 +15,8 @@ A simple Maven plugin for compressing static assets (e.g. CSS and JavaScript fil
 				<goal>gzip</goal>
 			</goals>
 			<configuration>
-				<resourcedir>${project.build.directory}/${project.build.finalName}/css</resourcedir>
+				<directory>${project.build.directory}/${project.build.finalName}/css</directory>
+				<filter>\.css$</filter>
 			</configuration>
 		</execution>
 	</executions>
