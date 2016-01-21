@@ -1,8 +1,9 @@
 # ResourceGZipper
 
-Simple Maven plugin to gzip JS & CSS files at build time. No other dependencies, other than Maven itself.
+A simple Maven plugin for compressing static assets (e.g. CSS and JavaScript files) at build time.
 
 ## Usage:
+```
 <plugin>
 	<groupId>com.github.ryanholdren</groupId>
 	<artifactId>resourcegzipper</artifactId>
@@ -19,6 +20,4 @@ Simple Maven plugin to gzip JS & CSS files at build time. No other dependencies,
 		</execution>
 	</executions>
 </plugin>
-
-## License
-Licensed under the MIT license.
+```
