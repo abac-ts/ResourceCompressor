@@ -3,7 +3,7 @@
 
   <groupId>com.github.ryanholdren</groupId>
   <artifactId>resourcegzipper</artifactId>
-  <version>0.0.2</version>
+  <version>2016-02-02</version>
   <packaging>maven-plugin</packaging>
   <name>ResourceGZipper</name>
   <description>A Maven plugin for compressing static assets (e.g. CSS and JavaScript files) at build time.</description>

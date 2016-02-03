@@ -8,6 +8,7 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
+import java.util.zip.GZIPOutputStream;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
@@ -46,13 +47,15 @@ public abstract class AbstractResourceGZipperMojo extends AbstractMojo {
 	@Override
 	public void execute() throws MojoExecutionException {
 		final Path directory = getResourceDirectory();
-		final Predicate<Path> filter = getFilter();
+		final Predicate<Path> predicate = getFilter();
 		try (
 			final Stream<Path> resources = Files.walk(directory);
 		) {
-			resources.filter(filter).forEach(resource -> {
+			resources.filter(predicate).forEach(resource -> {
 				try (
-					final FileOutputStream output = new FileOutputStream(resource.toString() + ".gz")
+					final GZIPOutputStream output = new GZIPOutputStream(
+						new FileOutputStream(resource.toString() + ".gz")
+					)
 				) {
 					Files.copy(resource, output);
 					log.info("GZipped resource file: '" + resource + "'.");
