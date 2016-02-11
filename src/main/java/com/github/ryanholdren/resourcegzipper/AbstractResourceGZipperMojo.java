@@ -4,6 +4,7 @@ import java.io.FileOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -52,13 +53,24 @@ public abstract class AbstractResourceGZipperMojo extends AbstractMojo {
 			final Stream<Path> resources = Files.walk(directory);
 		) {
 			resources.filter(predicate).forEach(resource -> {
-				try (
-					final GZIPOutputStream output = new GZIPOutputStream(
-						new FileOutputStream(resource.toString() + ".gz")
-					)
-				) {
-					Files.copy(resource, output);
-					log.info("GZipped resource file: '" + resource + "'.");
+				try {
+					final Path gzippedResource = Paths.get(resource.toString() + ".gz");
+					if (Files.exists(gzippedResource)) {
+						final Instant lastModified = Files.getLastModifiedTime(resource).toInstant();
+						final Instant lastCompressed = Files.getLastModifiedTime(gzippedResource).toInstant();
+						if (lastCompressed.isAfter(lastModified)) {
+							log.info("Skipped GZipping of resource file: '" + resource + "' because it has not been modified.");
+							return;
+						}
+					}
+					try (
+						final GZIPOutputStream output = new GZIPOutputStream(
+							new FileOutputStream(gzippedResource.toFile())
+						)
+					) {
+						Files.copy(resource, output);
+						log.info("GZipped resource file: '" + resource + "'.");
+					}
 				} catch (Throwable exception) {
 					log.error("Unexpected error GZipping resource file: '" + resource + "'.", exception);
 				}
