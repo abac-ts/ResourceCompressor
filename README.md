@@ -1,18 +1,17 @@
-# ResourceGZipper
+# ResourceCompressor
 
-A simple Maven plugin for compressing static assets (e.g. CSS and JavaScript files) at build time.
+A simple Maven plugin for compressing static assets (e.g. CSS and JavaScript files) at build time using GZip and Brotli.
 
 ## Usage:
 ```
 <plugin>
 	<groupId>com.github.ryanholdren</groupId>
-	<artifactId>resourcegzipper</artifactId>
-	<version>2016-02-10</version>
+	<artifactId>resourcecompressor</artifactId>
+	<version>2016-06-21</version>
 	<executions>
 		<execution>
-			<id>gzip-css</id>
 			<goals>
-				<goal>gzip</goal>
+				<goal>compress</goal>
 			</goals>
 			<configuration>
 				<directory>${project.build.directory}/${project.build.finalName}/css</directory>
