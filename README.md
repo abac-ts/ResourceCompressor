@@ -7,7 +7,7 @@ A simple Maven plugin for compressing static assets (e.g. CSS and JavaScript fil
 <plugin>
 	<groupId>com.github.ryanholdren</groupId>
 	<artifactId>resourcecompressor</artifactId>
-	<version>2016-06-21</version>
+	<version>2016-07-15</version>
 	<executions>
 		<execution>
 			<goals>

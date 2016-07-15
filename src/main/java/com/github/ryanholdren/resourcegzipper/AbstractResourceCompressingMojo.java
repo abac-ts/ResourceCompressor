@@ -3,25 +3,23 @@ package com.github.ryanholdren.resourcegzipper;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.Files;
+import static java.nio.file.Files.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import static java.util.regex.Pattern.compile;
 import java.util.stream.Stream;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.meteogroup.jbrotli.Brotli;
-import static org.meteogroup.jbrotli.Brotli.DEFAULT_LGBLOCK;
-import static org.meteogroup.jbrotli.Brotli.DEFAULT_LGWIN;
+import static org.meteogroup.jbrotli.Brotli.*;
 import org.meteogroup.jbrotli.Brotli.Mode;
-import static org.meteogroup.jbrotli.Brotli.Mode.FONT;
-import static org.meteogroup.jbrotli.Brotli.Mode.GENERIC;
-import static org.meteogroup.jbrotli.Brotli.Mode.TEXT;
+import static org.meteogroup.jbrotli.Brotli.Mode.*;
 import org.meteogroup.jbrotli.io.BrotliOutputStream;
 import org.meteogroup.jbrotli.libloader.BrotliLibraryLoader;
 
@@ -49,10 +47,10 @@ public abstract class AbstractResourceCompressingMojo extends AbstractMojo {
 			throw new MojoExecutionException("No resource directory was not specified!");
 		}
 		final Path directory = Paths.get(pathToDirectory);
-		if (Files.notExists(directory)) {
+		if (notExists(directory)) {
 			throw new MojoExecutionException("The specified resource directory, '" + directory + "', does not exist!");
 		}
-		if (Files.isDirectory(directory)) {
+		if (isDirectory(directory)) {
 			return directory;
 		} else {
 			throw new MojoExecutionException("The specified resource directory, '" + directory + "', is not a directory at all!");
@@ -64,7 +62,7 @@ public abstract class AbstractResourceCompressingMojo extends AbstractMojo {
 		final Path directory = getResourceDirectory();
 		final Predicate<Path> predicate = getFilter();
 		try (
-			final Stream<Path> resources = Files.walk(directory);
+			final Stream<Path> resources = walk(directory);
 		) {
 			resources.filter(predicate).forEach(resource -> {
 				compressWithGZip(resource);
@@ -156,25 +154,26 @@ public abstract class AbstractResourceCompressingMojo extends AbstractMojo {
 		public void compress(Path resource) {
 			final Path compressedResource = Paths.get(resource.toString() + '.' + getFileExtension());
 			try {
-				if (Files.exists(compressedResource)) {
-					final Instant lastModified = Files.getLastModifiedTime(resource).toInstant();
-					final Instant lastCompressed = Files.getLastModifiedTime(compressedResource).toInstant();
+				if (exists(compressedResource)) {
+					final Instant lastModified = getLastModifiedTime(resource).toInstant();
+					final Instant lastCompressed = getLastModifiedTime(compressedResource).toInstant();
 					if (lastCompressed.isAfter(lastModified)) {
 						log.info("Skipped compressing resource file with " + getNameOfCompressionAlgorithm() + " because it has not been modified: '" + resource + "'.");
 						return;
 					}
 				}
+				final byte[] contents = readAllBytes(resource);
 				try (
 					final OutputStream output = compressedOutputStream(
 						new FileOutputStream(compressedResource.toFile())
 					)
 				) {
-					Files.copy(resource, output);
+					output.write(contents);
 					log.info("Compressed resource file with " + getNameOfCompressionAlgorithm() + ": '" + resource + "'.");
 				}
 			} catch (Exception exception) {
 				try {
-					Files.deleteIfExists(compressedResource);
+					deleteIfExists(compressedResource);
 				} catch (Exception suppressed) {
 					exception.addSuppressed(suppressed);
 				}
@@ -184,7 +183,7 @@ public abstract class AbstractResourceCompressingMojo extends AbstractMojo {
 	}
 
 	private Predicate<Path> getFilter() {
-		final Pattern pattern = Pattern.compile(filter);
+		final Pattern pattern = compile(filter);
 		return resource -> {
 			final Matcher matcher = pattern.matcher(resource.toString());
 			return matcher.find();
