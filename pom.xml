@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.ryanholdren</groupId>
 	<artifactId>resourcecompressor</artifactId>
-	<version>2016-07-15</version>
+	<version>2017-06-24</version>
 	<packaging>maven-plugin</packaging>
 	<name>ResourceCompressor</name>
 	<description>A Maven plugin for compressing static assets (e.g. CSS and JavaScript files) at build time.</description>
