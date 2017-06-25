@@ -67,7 +67,7 @@ public abstract class AbstractResourceCompressingMojo extends AbstractMojo {
 		try (
 			final Stream<Path> resources = walk(directory);
 		) {
-			resources.filter(predicate).forEach(resource -> {
+			resources.filter(predicate).parallel().forEach(resource -> {
 				compressWithGZip(resource);
 				compressWithBrotli(resource);
 			});
