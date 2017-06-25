@@ -32,6 +32,9 @@ public abstract class AbstractResourceCompressingMojo extends AbstractMojo {
 	@Parameter(property="filter", defaultValue = "\\.(cs|j)s$")
 	private String filter;
 
+	@Parameter(property="compression", defaultValue = "SMALLEST")
+	private CompressionLevel compression;
+
 	private Log log;
 
 	@Override
@@ -88,13 +91,24 @@ public abstract class AbstractResourceCompressingMojo extends AbstractMojo {
 
 			@Override
 			protected OutputStream compressedOutputStream(OutputStream stream) throws IOException {
-				return new GZIPOutputStreamWithBestCompression(stream);
+				return new GZIPOutputStreamWithCustomCompressionLevel(stream, getDeflaterLevel());
 			}
 
 		}.compress(resource);
 	}
 
-	private static final int MAX_BROTLI_QUALITY = 11;
+	private int getDeflaterLevel() {
+		switch (compression) {
+			case FASTEST:
+				return 0;
+			case BAlANCED:
+				return 5;
+			case SMALLEST:
+				return 9;
+			default:
+				throw new IllegalStateException();
+		}
+	}
 
 	private static final String[] TEXT_FILE_EXTENSION = {
 		".js", ".css", ".svg"
@@ -124,7 +138,7 @@ public abstract class AbstractResourceCompressingMojo extends AbstractMojo {
 					mode = GENERIC;
 				}
 				final Brotli.Parameter parameter = new Brotli.Parameter(
-					mode, MAX_BROTLI_QUALITY, DEFAULT_LGWIN, DEFAULT_LGBLOCK
+					mode, getBrotliLevel(), DEFAULT_LGWIN, DEFAULT_LGBLOCK
 				);
 				return new BrotliOutputStream(stream, parameter);
 			}
@@ -143,6 +157,19 @@ public abstract class AbstractResourceCompressingMojo extends AbstractMojo {
 			}
 
 		}.compress(resource);
+	}
+
+	public int getBrotliLevel() {
+		switch (compression) {
+			case FASTEST:
+				return 0;
+			case BAlANCED:
+				return 6;
+			case SMALLEST:
+				return 11;
+			default:
+				throw new IllegalStateException();
+		}
 	}
 
 	private abstract class Compressor {

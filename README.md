@@ -16,6 +16,7 @@ A simple Maven plugin for compressing static assets (e.g. CSS and JavaScript fil
 			<configuration>
 				<directory>${project.build.directory}/${project.build.finalName}/css</directory>
 				<filter>\.css$</filter>
+				<compression>FASTEST</compression>
 			</configuration>
 		</execution>
 	</executions>
