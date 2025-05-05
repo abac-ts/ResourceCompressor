@@ -1,9 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.github.ryanholdren</groupId>
+	<groupId>lu.abac</groupId>
 	<artifactId>resourcecompressor</artifactId>
-	<version>2017-06-24</version>
+	<version>1.0-SNAPSHOT</version>
 	<packaging>maven-plugin</packaging>
 	<name>ResourceCompressor</name>
 	<description>A Maven plugin for compressing static assets (e.g. CSS and JavaScript files) at build time.</description>
@@ -32,12 +32,19 @@
 				<role>Developer</role>
 			</roles>
 		</developer>
+		<developer>
+			<name>Thierry Steinberg</name>
+			<email>thierry.steinberg@abac.lu</email>
+			<roles>
+				<role>Developer</role>
+			</roles>
+		</developer>
 	</developers>
 
 	<scm>
-		<connection>scm:git:git@github.com:RyanHoldren/ResourceGZipper.git</connection>
-		<developerConnection>scm:git:git@github.com:RyanHoldren/ResourceGZipper.git</developerConnection>
-		<url>git@github.com:RyanHoldren/ResourceGZipper.git</url>
+		<connection>scm:git:git@github.com:abac.ts/ResourceGZipper.git</connection>
+		<developerConnection>scm:git:git@github.com:abac.ts/ResourceGZipper.git</developerConnection>
+		<url>git@github.com:abac.ts/ResourceGZipper.git</url>
 	</scm>
 
 	<properties>
@@ -159,12 +166,10 @@
 			</build>
 			<distributionManagement>
 				<snapshotRepository>
-					<id>ossrh</id>
-					<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+                    <id>abac-repo</id>
 				</snapshotRepository>
 				<repository>
-					<id>ossrh</id>
-					<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+                    <id>abac-repo</id>
 				</repository>
 			</distributionManagement>
 		</profile>
