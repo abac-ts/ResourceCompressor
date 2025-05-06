@@ -1,4 +1,4 @@
-package com.github.ryanholdren.resourcegzipper;
+package lu.abac.resourcecompressor;
 
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;

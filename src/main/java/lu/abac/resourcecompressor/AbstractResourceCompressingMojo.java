@@ -1,6 +1,6 @@
-package com.github.ryanholdren.resourcegzipper;
+package lu.abac.resourcecompressor;
 
-import com.github.ryanholdren.resourcegzipper.compressors.*;
+import lu.abac.resourcecompressor.compressors.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;

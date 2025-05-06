@@ -1,4 +1,4 @@
-package com.github.ryanholdren.resourcegzipper;
+package lu.abac.resourcecompressor;
 
 import java.io.FileOutputStream;
 import java.io.IOException;

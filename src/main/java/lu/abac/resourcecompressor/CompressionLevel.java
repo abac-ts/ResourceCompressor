@@ -1,4 +1,4 @@
-package com.github.ryanholdren.resourcegzipper;
+package lu.abac.resourcecompressor;
 
 public enum CompressionLevel {
 	FASTEST,

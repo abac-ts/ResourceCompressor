@@ -1,8 +1,8 @@
-package com.github.ryanholdren.resourcegzipper.compressors;
+package lu.abac.resourcecompressor.compressors;
 
-import com.github.ryanholdren.resourcegzipper.AbstractResourceCompressingMojo;
-import com.github.ryanholdren.resourcegzipper.CompressionLevel;
-import com.github.ryanholdren.resourcegzipper.Compressor;
+import lu.abac.resourcecompressor.AbstractResourceCompressingMojo;
+import lu.abac.resourcecompressor.CompressionLevel;
+import lu.abac.resourcecompressor.Compressor;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
