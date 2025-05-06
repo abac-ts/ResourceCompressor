@@ -1,48 +1,46 @@
 package com.github.ryanholdren.resourcegzipper;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import static java.nio.file.Files.*;
+import com.github.ryanholdren.resourcegzipper.compressors.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Instant;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import static java.util.regex.Pattern.compile;
 import java.util.stream.Stream;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.meteogroup.jbrotli.Brotli;
-import static org.meteogroup.jbrotli.Brotli.*;
-import org.meteogroup.jbrotli.Brotli.Mode;
-import static org.meteogroup.jbrotli.Brotli.Mode.*;
-import org.meteogroup.jbrotli.io.BrotliOutputStream;
-import org.meteogroup.jbrotli.libloader.BrotliLibraryLoader;
 
 public abstract class AbstractResourceCompressingMojo extends AbstractMojo {
 
-	static {
-		BrotliLibraryLoader.loadBrotli();
-	}
-
-	@Parameter(property="filter", defaultValue = "\\.(cs|j)s$")
+	@Parameter(property="filter", required = true)
 	private String filter;
 
 	@Parameter(property="compression", defaultValue = "SMALLEST")
 	private CompressionLevel compression;
 
-	private Log log;
+	@Parameter(property="enableGzip", defaultValue = "true")
+	private boolean enableGzip;
+    
+	@Parameter(property="enableBrotli", defaultValue = "true")
+	private boolean enableBrotli;
+    
+	@Parameter(property="textFileExtensions", defaultValue = ".js .css .svg")
+	private String textFileExtensions;
+    
+	@Parameter(property="fontFileExtensions", defaultValue = ".woff")
+	private String fontFileExtensions;
+    
 
-	@Override
-	public void setLog(Log log) {
-		this.log = log;
-	}
+    private Set<String> parsedTextFileExtensions = null;
+    private Set<String> parsedFontFileExtensions = null;
+    
 
-	protected abstract String getPathToResourceDirectory();
+    protected abstract String getPathToResourceDirectory();
 
 	private Path getResourceDirectory() throws MojoExecutionException {
 		final String pathToDirectory = getPathToResourceDirectory();
@@ -50,10 +48,10 @@ public abstract class AbstractResourceCompressingMojo extends AbstractMojo {
 			throw new MojoExecutionException("No resource directory was not specified!");
 		}
 		final Path directory = Paths.get(pathToDirectory);
-		if (notExists(directory)) {
+		if (Files.notExists(directory)) {
 			throw new MojoExecutionException("The specified resource directory, '" + directory + "', does not exist!");
 		}
-		if (isDirectory(directory)) {
+		if (Files.isDirectory(directory)) {
 			return directory;
 		} else {
 			throw new MojoExecutionException("The specified resource directory, '" + directory + "', is not a directory at all!");
@@ -62,14 +60,22 @@ public abstract class AbstractResourceCompressingMojo extends AbstractMojo {
 
 	@Override
 	public void execute() throws MojoExecutionException {
-		final Path directory = getResourceDirectory();
+        if (!enableGzip && !enableBrotli) {
+            throw new MojoExecutionException("Must enable at least one compression type");
+        }
+        
+        final Path directory = getResourceDirectory();
 		final Predicate<Path> predicate = getFilter();
 		try (
-			final Stream<Path> resources = walk(directory);
+			final Stream<Path> resources = Files.walk(directory);
 		) {
 			resources.filter(predicate).parallel().forEach(resource -> {
-				compressWithGZip(resource);
-				compressWithBrotli(resource);
+                if (enableGzip) {
+                    compressWithGZip(resource);
+                }
+                if (enableBrotli) {
+                    compressWithBrotli(resource);
+                }
 			});
 		} catch (Exception exception) {
 			throw new MojoExecutionException("Could not walk the specified resource directory, '" + directory + "'!", exception);
@@ -77,144 +83,57 @@ public abstract class AbstractResourceCompressingMojo extends AbstractMojo {
 	}
 
 	private void compressWithGZip(Path resource) {
-		new Compressor() {
-
-			@Override
-			protected String getFileExtension() {
-				return "gz";
-			}
-
-			@Override
-			protected String getNameOfCompressionAlgorithm() {
-				return "GZip";
-			}
-
-			@Override
-			protected OutputStream compressedOutputStream(OutputStream stream) throws IOException {
-				return new GZIPOutputStreamWithCustomCompressionLevel(stream, getDeflaterLevel());
-			}
-
-		}.compress(resource);
+		new GzipCompressor(this).compress(resource, compression);
 	}
-
-	private int getDeflaterLevel() {
-		switch (compression) {
-			case FASTEST:
-				return 0;
-			case BAlANCED:
-				return 5;
-			case SMALLEST:
-				return 9;
-			default:
-				throw new IllegalStateException();
-		}
-	}
-
-	private static final String[] TEXT_FILE_EXTENSION = {
-		".js", ".css", ".svg"
-	};
 
 	private void compressWithBrotli(Path resource) {
-		new Compressor() {
-
-			@Override
-			protected String getFileExtension() {
-				return "br";
-			}
-
-			@Override
-			protected String getNameOfCompressionAlgorithm() {
-				return "Brotli";
-			}
-
-			@Override
-			protected OutputStream compressedOutputStream(OutputStream stream) throws IOException {
-				final Mode mode;
-				if (isText(resource)) {
-					mode = TEXT;
-				} else if (isFont(resource)) {
-					mode = FONT;
-				} else {
-					mode = GENERIC;
-				}
-				final Brotli.Parameter parameter = new Brotli.Parameter(
-					mode, getBrotliLevel(), DEFAULT_LGWIN, DEFAULT_LGBLOCK
-				);
-				return new BrotliOutputStream(stream, parameter);
-			}
-
-			private boolean isText(Path resource) {
-				for (String extension : TEXT_FILE_EXTENSION) {
-					if (resource.endsWith(extension)) {
-						return true;
-					}
-				}
-				return false;
-			}
-
-			private boolean isFont(Path resource) {
-				return resource.endsWith(".woff");
-			}
-
-		}.compress(resource);
-	}
-
-	public int getBrotliLevel() {
-		switch (compression) {
-			case FASTEST:
-				return 0;
-			case BAlANCED:
-				return 6;
-			case SMALLEST:
-				return 11;
-			default:
-				throw new IllegalStateException();
-		}
-	}
-
-	private abstract class Compressor {
-
-		protected abstract String getFileExtension();
-		protected abstract String getNameOfCompressionAlgorithm();
-		protected abstract OutputStream compressedOutputStream(OutputStream stream) throws IOException;
-
-		public void compress(Path resource) {
-			final Path compressedResource = Paths.get(resource.toString() + '.' + getFileExtension());
-			try {
-				if (exists(compressedResource)) {
-					final Instant lastModified = getLastModifiedTime(resource).toInstant();
-					final Instant lastCompressed = getLastModifiedTime(compressedResource).toInstant();
-					if (lastCompressed.isAfter(lastModified)) {
-						log.info("Skipped compressing resource file with " + getNameOfCompressionAlgorithm() + " because it has not been modified: '" + resource + "'.");
-						return;
-					}
-				}
-				final byte[] contents = readAllBytes(resource);
-				try (
-					final OutputStream output = compressedOutputStream(
-						new FileOutputStream(compressedResource.toFile())
-					)
-				) {
-					output.write(contents);
-					log.info("Compressed resource file with " + getNameOfCompressionAlgorithm() + ": '" + resource + "'.");
-				}
-			} catch (Exception exception) {
-				try {
-					deleteIfExists(compressedResource);
-				} catch (Exception suppressed) {
-					exception.addSuppressed(suppressed);
-				}
-				log.error("Unexpected error while compressing resource file with " + getNameOfCompressionAlgorithm() + ": '" + resource + "'.", exception);
-			}
-		}
+		new BrotliCompressor(this).compress(resource, compression);
 	}
 
 	private Predicate<Path> getFilter() {
-		final Pattern pattern = compile(filter);
+		final Pattern pattern = Pattern.compile(filter);
 		return resource -> {
 			final Matcher matcher = pattern.matcher(resource.toString());
 			return matcher.find();
 		};
 	}
+    
+    
+    private static final Pattern SPLIT_SPACE_PATTERN = Pattern.compile("\\s+");
+
+    private Set<String> getTextFileExtensions() {
+        if (parsedTextFileExtensions == null) {
+            String[] parts = SPLIT_SPACE_PATTERN.split(textFileExtensions.trim());
+            parsedTextFileExtensions = new HashSet<>(Arrays.asList(parts));
+        }
+        return parsedTextFileExtensions;
+    }
+
+    public boolean isText(Path resource) {
+        for (String extension : getTextFileExtensions()) {
+            if (resource.endsWith(extension)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private Set<String> getFontFileExtensions() {
+        if (parsedFontFileExtensions == null) {
+            String[] parts = SPLIT_SPACE_PATTERN.split(fontFileExtensions.trim());
+            parsedFontFileExtensions = new HashSet<>(Arrays.asList(parts));
+        }
+        return parsedFontFileExtensions;
+    }
+
+    public boolean isFont(Path resource) {
+        for (String extension : getFontFileExtensions()) {
+            if (resource.endsWith(extension)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
 
 }
