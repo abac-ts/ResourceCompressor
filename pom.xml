@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>lu.abac</groupId>
 	<artifactId>resourcecompressor-maven-plugin</artifactId>
-	<version>1.0-SNAPSHOT</version>
+	<version>1.0</version>
 	<packaging>maven-plugin</packaging>
 	<name>ResourceCompressor</name>
 	<description>A Maven plugin for compressing static assets (e.g. CSS and JavaScript files) at build time.</description>
